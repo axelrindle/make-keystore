@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2025
+          - windows-11-arm
+          - macos-latest-large
+          - macos-26
+    env:
+      G_IMAGE_NAME: ${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Collect system information
+        id: system
+        run: |
+          echo "SYSTEM_ARCH=$(uname -m)" >> "$GITHUB_OUTPUT"
+          echo "SYSTEM_TYPE=$(uname -o)" >> "$GITHUB_OUTPUT"
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm-community'
+          cache: 'gradle'
+          native-image-job-reports: 'true'
+          native-image-enable-sbom: 'true'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build binary
+        run: ./gradlew nativeCompile --no-daemon
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.G_IMAGE_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
+          path: build/native/nativeCompile/*

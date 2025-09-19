@@ -1,0 +1,14 @@
+[versions]
+application = "1.0.0"
+jvm = "21"
+
+kotlin = "2.2.0"
+graalvm = "0.11.0"
+clikt = "5.0.3"
+
+[libraries]
+clikt = { group = "com.github.ajalt.clikt", name = "clikt-core", version.ref = "clikt" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+graalvm = { id = "org.graalvm.buildtools.native", version.ref = "graalvm" }
