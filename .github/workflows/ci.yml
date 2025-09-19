@@ -34,7 +34,6 @@ jobs:
           distribution: 'graalvm-community'
           cache: 'gradle'
           native-image-job-reports: 'true'
-          native-image-enable-sbom: 'true'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
