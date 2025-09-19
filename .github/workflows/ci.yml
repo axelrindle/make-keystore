@@ -13,7 +13,6 @@ jobs:
         platform:
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - windows-2025
           - macos-latest-large
           - macos-26
     env:
