@@ -36,8 +36,5 @@ graalvmNative {
         imageName.set(rootProject.name)
         this.mainClass.set(appMainClass)
         useFatJar.set(true)
-
-        buildArgs.add("--strict-image-heap")
-        buildArgs.add("-march=native")
     }
 }
