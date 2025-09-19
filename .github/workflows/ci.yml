@@ -24,7 +24,7 @@ jobs:
         id: system
         run: |
           echo "SYSTEM_ARCH=$(uname -m)" >> "$GITHUB_OUTPUT"
-          echo "SYSTEM_TYPE=$(uname -o)" >> "$GITHUB_OUTPUT"
+          echo "SYSTEM_TYPE=$(uname -s)" >> "$GITHUB_OUTPUT"
 
       - uses: graalvm/setup-graalvm@v1
         with:
