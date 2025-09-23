@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.graalvm)
+
+    application
 }
 
 group = "de.axelrindle"
@@ -11,7 +13,16 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.clikt)
+    implementation(libs.bundles.clikt) {
+        exclude(group = "com.github.ajalt.mordant", module = "mordant")
+    }
+
+    testImplementation(platform("org.junit:junit-bom:${libs.versions.junit.get()}"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.bundles.clikt)
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {
@@ -27,6 +38,14 @@ tasks.withType<Jar> {
             "Implementation-Version" to version
         ))
     }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+application {
+    mainClass = appMainClass
 }
 
 graalvmNative {

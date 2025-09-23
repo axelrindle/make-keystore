@@ -5,9 +5,14 @@ jvm = "21"
 kotlin = "2.2.0"
 graalvm = "0.11.0"
 clikt = "5.0.3"
+junit = "5.13.4"
 
 [libraries]
-clikt = { group = "com.github.ajalt.clikt", name = "clikt-core", version.ref = "clikt" }
+clikt-core = { group = "com.github.ajalt.clikt", name = "clikt-core", version.ref = "clikt" }
+clikt-jvm = { group = "com.github.ajalt.clikt", name = "clikt-jvm", version.ref = "clikt" }
+
+[bundles]
+clikt = ["clikt-core", "clikt-jvm"]
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
