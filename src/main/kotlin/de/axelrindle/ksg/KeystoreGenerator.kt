@@ -8,7 +8,7 @@ import com.github.ajalt.clikt.parsers.CommandLineParser
 import de.axelrindle.ksg.cmd.CreateCommand
 
 fun main(argv: Array<String>) {
-    val argu = System.getenv("G_ARGS")
+    val argu = System.getenv("MK_ARGS")
     val args = if (argu != null) CommandLineParser.tokenize(argu) else argv.toList()
 
     RootCommand()
@@ -16,9 +16,7 @@ fun main(argv: Array<String>) {
         .main(args)
 }
 
-val APPLICATION_NAME = System.getenv("G_IMAGE_NAME") ?: "make-keystore"
-
-class RootCommand : CoreCliktCommand(APPLICATION_NAME) {
+    class RootCommand : CoreCliktCommand(Config.APPLICATION_NAME) {
     override fun run() = Unit
 
     init {

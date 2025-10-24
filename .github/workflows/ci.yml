@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  G_IMAGE_NAME: ${{ github.event.repository.name }}
+  MK_APPLICATION_NAME: ${{ github.event.repository.name }}
   REGISTRY: ghcr.io
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.G_IMAGE_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
+          name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
           path: build/native/nativeCompile/*
 
   container:
