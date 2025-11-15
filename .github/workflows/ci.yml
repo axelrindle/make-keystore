@@ -44,6 +44,9 @@ jobs:
 
       - name: Build binary
         run: ./gradlew nativeCompile --no-daemon
+        env:
+          BUILD_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          BUILD_IMAGE_NAME: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -167,7 +170,6 @@ jobs:
           sources: |
             ${{ steps.transform.outputs.sources }}
 
-
   release:
     name: Create Release
     runs-on: ubuntu-latest
@@ -202,4 +204,4 @@ jobs:
             ## Changelog
             ${{ steps.extract-changelog.outputs.markdown }}
           files: |
-            binaries/*
+            ${{ steps.artifacts.outputs.download-path }}/*

@@ -1,5 +1,4 @@
 [versions]
-application = "1.0.0"
 jvm = "21"
 
 kotlin = "2.2.0"

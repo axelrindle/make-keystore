@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.axelrindle"
-version = libs.versions.application.get()
+version = System.getenv("BUILD_VERSION") ?: "dev"
 
 repositories {
     mavenCentral()
@@ -58,7 +58,7 @@ graalvmNative {
     toolchainDetection = true
 
     binaries.named("main") {
-        imageName.set(rootProject.name)
+        imageName.set(System.getenv("BUILD_IMAGE_NAME") ?: rootProject.name)
         this.mainClass.set(appMainClass)
         useFatJar.set(true)
     }
