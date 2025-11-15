@@ -74,7 +74,7 @@ jobs:
           echo "SYSTEM_TYPE=$(uname -s)" >> "$GITHUB_OUTPUT"
 
       - name: Download binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
           path: build/native/nativeCompile
@@ -137,7 +137,7 @@ jobs:
       packages: write
     steps:
       - name: Download digest artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: "image-digest-*"
           merge-multiple: true
