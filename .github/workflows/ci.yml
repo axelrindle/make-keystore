@@ -163,7 +163,7 @@ jobs:
         uses: int128/docker-manifest-create-action@v2
         with:
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
           sources: |
             ${{ steps.transform.outputs.sources }}
 
