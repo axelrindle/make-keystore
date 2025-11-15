@@ -9,4 +9,4 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     chmod +x /usr/local/bin/make-keystore
 
-CMD [ "/usr/local/bin/make-keystore" ]
+ENTRYPOINT [ "/usr/local/bin/make-keystore" ]
