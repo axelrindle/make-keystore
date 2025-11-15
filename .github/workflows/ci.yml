@@ -89,10 +89,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ github.repository }}
-          flavor: |
-            latest=true
           tags: |
             type=semver,pattern={{version}},suffix=${{ steps.system.outputs.SYSTEM_ARCH }}
+            type=edge,suffix=${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
