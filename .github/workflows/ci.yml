@@ -52,7 +52,24 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
     steps:
+      - name: Collect system information
+        id: system
+        run: |
+          echo "SYSTEM_ARCH=$(uname -m)" >> "$GITHUB_OUTPUT"
+          echo "SYSTEM_TYPE=$(uname -s)" >> "$GITHUB_OUTPUT"
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
+          path: build/native/nativeCompile
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -69,16 +86,21 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository }}
+          flavor: |
+            latest=true
+          tags: |
+            type=semver,pattern={{version}},suffix=${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         id: push
         with:
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: |
-            linux/amd64
-            linux/arm64
