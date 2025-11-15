@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    name: Compile
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
@@ -45,7 +46,8 @@ jobs:
           name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
           path: build/native/nativeCompile/*
 
-  container:
+  container-image:
+    name: Build container image
     runs-on: ${{ matrix.platform }}
     needs:
       - build
@@ -113,21 +115,24 @@ jobs:
         run: |
           echo "${{ steps.build.outputs.digest }}" | tee "${{ steps.system.outputs.SYSTEM_ARCH }}.digest"
 
-      - uses: actions/upload-artifact@v5
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v5
         with:
           name: 'image-digest-${{ steps.system.outputs.SYSTEM_ARCH }}'
           path: "*.digest"
 
   manifest:
+    name: Create image manifest list
     runs-on: ubuntu-latest
     needs:
-      - container
+      - container-image
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/download-artifact@v5
+      - name: Download digest artifact
+        uses: actions/download-artifact@v5
         with:
           pattern: "*.digest"
           merge-multiple: true
@@ -138,7 +143,8 @@ jobs:
           RESULT=$(cat *.digest | awk '{print "${{ env.REGISTRY }}/${{ github.repository }}@" $0}')
           echo "sources=${RESULT}" >> "$GITHUB_OUTPUT"
 
-      - uses: int128/docker-manifest-create-action@v2
+      - name: Create manifest list
+        uses: int128/docker-manifest-create-action@v2
         with:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}:latest
