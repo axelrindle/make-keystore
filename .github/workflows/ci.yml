@@ -99,7 +99,7 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v6
-        id: push
+        id: build
         with:
           context: .
           tags: ${{ steps.meta.outputs.tags }}
@@ -108,3 +108,40 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - uses: cloudposse/github-action-matrix-outputs-write@v1
+        id: out
+        with:
+          matrix-step-name: ${{ github.run_id }}
+          matrix-key: ${{ steps.system.outputs.SYSTEM_ARCH }}
+          outputs: |-
+            digest: ${{ steps.build.outputs.digest }}
+
+  manifest:
+    runs-on: ubuntu-latest
+    needs:
+      - container
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: cloudposse/github-action-matrix-outputs-read@v1
+        id: read
+        with:
+          matrix-step-name: ${{ github.run_id }}
+
+      - name: Transform output
+        id: transform
+        run: |
+          PIPELINE='.digest | to_entries | map("${{ env.REGISTRY }}/${{ github.repository }}@" + .value) | .[]'
+          INPUT='${{ fromJSON(steps.read.outputs.result) }}'
+          RESULT=$(jq -r "${PIPELINE}" - <<< "${INPUT}")
+          echo "sources=${RESULT}" >> "$GITHUB_OUTPUT"
+
+      - uses: int128/docker-manifest-create-action@v2
+        with:
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+          sources: |
+            ${{ steps.transform.outputs.sources }}
