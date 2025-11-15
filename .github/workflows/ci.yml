@@ -141,8 +141,11 @@ jobs:
         id: transform
         run: |
           RESULT=$(cat *.digest | awk '{print "${{ env.REGISTRY }}/${{ github.repository }}@" $0}')
-          echo "sources=${RESULT}" >> "$GITHUB_OUTPUT"
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
 
+          echo "sources<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "$RESULT" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Create manifest list
         uses: int128/docker-manifest-create-action@v2
         with:
