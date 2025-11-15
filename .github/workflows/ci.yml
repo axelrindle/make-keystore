@@ -46,7 +46,7 @@ jobs:
           path: build/native/nativeCompile/*
 
   container:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform }}
     needs:
       - build
     permissions:
