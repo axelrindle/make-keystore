@@ -49,7 +49,7 @@ jobs:
           BUILD_IMAGE_NAME: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
           path: build/native/nativeCompile/*
