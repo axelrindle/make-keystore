@@ -70,7 +70,7 @@ class CreateCommand : CoreCliktCommand() {
                 store.setCertificateEntry(it.name, cert)
             }
 
-        echo("created keystore with ${store.size()} entries")
+        echo("created keystore with ${store.size()} entries at $path")
 
         if (dryRun.not()) {
             path.outputStream().use { ous ->
