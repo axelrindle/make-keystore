@@ -115,6 +115,7 @@ jobs:
 
       - uses: actions/upload-artifact@v5
         with:
+          name: 'image-digest-${{ steps.system.outputs.SYSTEM_ARCH }}'
           path: "*.digest"
 
   manifest:
