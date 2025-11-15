@@ -7,6 +7,8 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 import de.axelrindle.ksg.cmd.CreateCommand
 
 fun main(argv: Array<String>) {
+    printBanner()
+
     RootCommand().main(argv)
 }
 
@@ -14,7 +16,7 @@ class RootCommand : CoreCliktCommand(Config.APPLICATION_NAME) {
     override fun run() = Unit
 
     init {
-        versionOption(javaClass.`package`.implementationVersion ?: "dev")
+        versionOption(appVersion())
 
         subcommands(
             CreateCommand(),

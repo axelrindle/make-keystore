@@ -8,6 +8,8 @@ import java.util.Scanner
 import java.util.concurrent.atomic.AtomicBoolean
 
 fun main() {
+    printBanner()
+
     val shouldContinue = AtomicBoolean(true)
     Runtime.getRuntime().addShutdownHook(Thread {
         shouldContinue.set(false)

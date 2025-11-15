@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.axelrindle"
-version = libs.versions.application
+version = libs.versions.application.get()
 
 repositories {
     mavenCentral()
@@ -42,6 +42,12 @@ tasks.withType<Jar> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.withType<ProcessResources> {
+    filesMatching("banner.txt") {
+        filter { it.replace("%APP_VERSION%", version.toString() ) }
+    }
 }
 
 application {
