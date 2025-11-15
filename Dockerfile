@@ -6,6 +6,7 @@ RUN apt-get update && \
     apt-get install -y \
         ca-certificates \
     && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    chmod +x /usr/local/bin/make-keystore
 
 CMD [ "/usr/local/bin/make-keystore" ]
