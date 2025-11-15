@@ -134,7 +134,7 @@ jobs:
       - name: Download digest artifact
         uses: actions/download-artifact@v5
         with:
-          pattern: "*.digest"
+          pattern: "image-digest-*"
           merge-multiple: true
 
       - name: Generate image names
