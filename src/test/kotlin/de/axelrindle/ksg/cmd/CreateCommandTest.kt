@@ -52,7 +52,7 @@ class CreateCommandTest {
 
         val store = KeyStore.getInstance("PKCS12")
         Assertions.assertDoesNotThrow { path.inputStream().use { store.load(it, KEYSTORE_PASSWORD.toCharArray()) } }
-        Assertions.assertEquals(1, store.size())
+        Assertions.assertEquals(2, store.size())
     }
 
     @Test

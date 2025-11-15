@@ -9,7 +9,7 @@ import de.axelrindle.ksg.makeFactory
 import de.axelrindle.ksg.makeStore
 import kotlin.io.path.*
 
-const val GLOB_CERTIFICATE = "*.pem"
+const val GLOB_CERTIFICATE = "*.{crt,pem}"
 
 class CreateCommand : CoreCliktCommand() {
 
