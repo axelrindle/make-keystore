@@ -1,6 +1,6 @@
 FROM debian:stable-slim
 
-COPY build/native/nativeCompile/make-keystore /usr/local/bin/make-keystore
+COPY build/native/nativeCompile/* /usr/local/bin/make-keystore
 
 RUN apt-get update && \
     apt-get install -y \
