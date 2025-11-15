@@ -16,7 +16,10 @@ class RootCommand : CoreCliktCommand(Config.APPLICATION_NAME) {
     override fun run() = Unit
 
     init {
-        versionOption(appVersion())
+        versionOption(appVersion()) {
+            printBanner()
+            "\uD83D\uDCE6 Utility wrapper around the Java keystore cli"
+        }
 
         subcommands(
             CreateCommand(),

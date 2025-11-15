@@ -1,6 +1,6 @@
 # make-keystore
 
->  📦 Utility wrapper around the Java keystore cli
+> 📦 Utility wrapper around the Java keystore cli
 
 I needed a way to create truststores on-the-fly in Kubernetes init-containers.
 
