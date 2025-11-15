@@ -58,6 +58,8 @@ jobs:
           - ubuntu-24.04
           - ubuntu-24.04-arm
     steps:
+      - uses: actions/checkout@v5
+
       - name: Collect system information
         id: system
         run: |
@@ -70,6 +72,9 @@ jobs:
           name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
           path: build/native/nativeCompile
 
+      - name: List artifacts
+        run: ls -Al build/native/nativeCompile
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -81,7 +86,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v5
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -90,8 +94,8 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},suffix=${{ steps.system.outputs.SYSTEM_ARCH }}
-            type=edge,suffix=${{ steps.system.outputs.SYSTEM_ARCH }}
+            type=semver,pattern={{version}},suffix=-${{ steps.system.outputs.SYSTEM_ARCH }}
+            type=edge,suffix=-${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
