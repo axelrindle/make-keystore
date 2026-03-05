@@ -17,8 +17,13 @@ class RootCommand : CoreCliktCommand(Config.APPLICATION_NAME) {
 
     init {
         versionOption(appVersion()) {
-            printBanner()
-            "\uD83D\uDCE6 Utility wrapper around the Java keystore cli"
+            buildString {
+                append("\uD83D\uDCE6  Utility wrapper around the Java keystore cli\n")
+                append("\n")
+
+                append("Java ")
+                append(Runtime.version().toString())
+            }
         }
 
         subcommands(
