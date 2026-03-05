@@ -13,6 +13,7 @@ on:
 env:
   MK_APPLICATION_NAME: ${{ github.event.repository.name }}
   REGISTRY: ghcr.io
+  JAVA_VERSION: 25
 
 jobs:
   build:
@@ -36,9 +37,9 @@ jobs:
 
       - uses: graalvm/setup-graalvm@v1
         with:
-          java-version: '21'
-          distribution: 'graalvm-community'
-          cache: 'gradle'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: graalvm-community
+          cache: gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
