@@ -96,6 +96,10 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: ${{ env.BUILD_IMAGE_NAME }}
+          path: build/native/nativeCompile/
+
+      - name: List files
+        run: tree
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
