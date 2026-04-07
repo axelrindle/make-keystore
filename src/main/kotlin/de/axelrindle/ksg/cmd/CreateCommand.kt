@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.types.boolean
 import de.axelrindle.ksg.KEYSTORE_DEFAULT_PASSWORD
 import de.axelrindle.ksg.makeFactory
 import de.axelrindle.ksg.makeStore
+import java.security.cert.X509Certificate
 import kotlin.io.path.*
 
 const val GLOB_CERTIFICATE = "*.{crt,pem}"
@@ -66,8 +67,17 @@ class CreateCommand : CoreCliktCommand() {
             }
             .forEach {
                 echo("adding certificate to keystore: ${it.absolutePathString()}")
-                val cert = it.inputStream().use { pem -> factory.generateCertificate(pem) }
-                store.setCertificateEntry(it.name, cert)
+                it.inputStream()
+                    .use { pem -> factory.generateCertificates(pem) }
+                    .forEachIndexed { index, cert ->
+                        var name: String
+                        if (cert is X509Certificate) {
+                            name = cert.subjectX500Principal.name
+                        } else {
+                            name = "${it.name}-${index + 1}"
+                        }
+                        store.setCertificateEntry(name, cert)
+                    }
             }
 
         echo("created keystore with ${store.size()} entries at $path")
