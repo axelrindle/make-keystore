@@ -1,7 +1,7 @@
 [versions]
 jvm = "25"
 
-kotlin = "2.3.0"
+kotlin = "2.3.20"
 graalvm = "0.11.4"
 clikt = "5.1.0"
 junit = "5.13.4"
