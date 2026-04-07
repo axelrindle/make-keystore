@@ -1,10 +1,8 @@
 package de.axelrindle.ksg
 
 import com.github.ajalt.clikt.core.main
-import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parsers.CommandLineParser
-import de.axelrindle.ksg.cmd.ExitCommand
-import java.util.Scanner
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 fun main() {
@@ -15,7 +13,7 @@ fun main() {
         shouldContinue.set(false)
     })
 
-    val cmd = RootCommand().subcommands(ExitCommand())
+    val cmd = RootCommand()
 
     val scanner = Scanner(System.`in`)
     while(shouldContinue.get()) {
