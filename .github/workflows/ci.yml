@@ -57,6 +57,7 @@ jobs:
         with:
           name: ${{ env.BUILD_IMAGE_NAME }}
           path: build/native/nativeCompile/*
+          retention-days: 1
 
   container-build:
     name: 🐳 Build Container Image
