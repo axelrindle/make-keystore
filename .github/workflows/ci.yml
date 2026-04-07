@@ -111,8 +111,8 @@ jobs:
             type=semver,pattern={{version}},suffix=-${{ matrix.arch }}
             type=edge,suffix=-${{ matrix.arch }}
           labels: |
-            org.opencontainers.image.title="traefik-configuration-provider"
-            org.opencontainers.image.description="Dynamically expose Traefik routers to upstream Traefik instances"
+            org.opencontainers.image.title="make-keystore"
+            org.opencontainers.image.description="📦 Utility wrapper around the Java keystore cli"
 
       - name: Build and push
         uses: docker/build-push-action@v7
