@@ -13,7 +13,6 @@ on:
 env:
   REGISTRY: ghcr.io
   JAVA_VERSION: 25
-  CI_BUILD_APPLICATION_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build:
@@ -35,7 +34,7 @@ jobs:
             system: macos
             runner: macos-26
     env:
-      BUILD_IMAGE_NAME: ${{ env.CI_BUILD_APPLICATION_NAME }}-${{ matrix.system }}-${{ matrix.arch }}
+      BUILD_IMAGE_NAME: ${{ github.event.repository.name }}-${{ matrix.system }}-${{ matrix.arch }}
       BUILD_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
     steps:
       - uses: actions/checkout@v6
@@ -75,7 +74,7 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     env:
-      BUILD_IMAGE_NAME: ${{ env.CI_BUILD_APPLICATION_NAME }}-${{ matrix.system }}-${{ matrix.arch }}
+      BUILD_IMAGE_NAME: ${{ github.event.repository.name }}-${{ matrix.system }}-${{ matrix.arch }}
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -197,7 +196,7 @@ jobs:
         id: artifacts
         with:
           merge-multiple: true
-          pattern: "${{ env.CI_BUILD_APPLICATION_NAME }}-*"
+          pattern: "${{ github.event.repository.name }}-*"
           path: binaries
 
       - uses: sean0x42/markdown-extract@v2
