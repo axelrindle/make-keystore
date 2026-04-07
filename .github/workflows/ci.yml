@@ -11,29 +11,36 @@ on:
       - main
 
 env:
-  MK_APPLICATION_NAME: ${{ github.event.repository.name }}
   REGISTRY: ghcr.io
   JAVA_VERSION: 25
+  CI_BUILD_APPLICATION_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build:
-    name: Compile
-    runs-on: ${{ matrix.platform }}
+    name: 🔨 Compile
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        platform:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - macos-latest-large
-          - macos-26
+        include:
+          - arch: amd64
+            system: linux
+            runner: ubuntu-latest
+          - arch: arm64
+            system: linux
+            runner: ubuntu-24.04-arm
+          - arch: amd64
+            system: macos
+            runner: macos-latest-large
+          - arch: arm64
+            system: macos
+            runner: macos-26
+    env:
+      BUILD_IMAGE_NAME: ${{ env.CI_BUILD_APPLICATION_NAME }}-${{ matrix.system }}-${{ matrix.arch }}
+      BUILD_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
     steps:
       - uses: actions/checkout@v6
-
-      - name: Collect system information
-        id: system
-        run: |
-          echo "SYSTEM_ARCH=$(uname -m)" >> "$GITHUB_OUTPUT"
-          echo "SYSTEM_TYPE=$(uname -s)" >> "$GITHUB_OUTPUT"
+        with:
+          fetch-depth: 0
 
       - uses: graalvm/setup-graalvm@v1
         with:
@@ -45,19 +52,16 @@ jobs:
 
       - name: Build binary
         run: ./gradlew nativeCompile --no-daemon
-        env:
-          BUILD_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
-          BUILD_IMAGE_NAME: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
 
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
+          name: ${{ env.BUILD_IMAGE_NAME }}
           path: build/native/nativeCompile/*
 
-  container-image:
-    name: Build container image
-    runs-on: ${{ matrix.platform }}
+  container-build:
+    name: 🐳 Build Container Image
+    runs-on: ${{ matrix.runner }}
     needs:
       - build
     permissions:
@@ -65,34 +69,92 @@ jobs:
       packages: write
     strategy:
       matrix:
-        platform:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    env:
+      BUILD_IMAGE_NAME: ${{ env.CI_BUILD_APPLICATION_NAME }}-${{ matrix.system }}-${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Collect system information
-        id: system
-        run: |
-          echo "SYSTEM_ARCH=$(uname -m)" >> "$GITHUB_OUTPUT"
-          echo "SYSTEM_TYPE=$(uname -s)" >> "$GITHUB_OUTPUT"
-
-      - name: Download binary
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.MK_APPLICATION_NAME }}-${{ steps.system.outputs.SYSTEM_TYPE }}-${{ steps.system.outputs.SYSTEM_ARCH }}
-          path: build/native/nativeCompile
-
-      - name: List artifacts
-        run: ls -Al build/native/nativeCompile
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Login to container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.BUILD_IMAGE_NAME }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},suffix=-${{ matrix.arch }}
+            type=edge,suffix=-${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.title="traefik-configuration-provider"
+            org.opencontainers.image.description="Dynamically expose Traefik routers to upstream Traefik instances"
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        id: build
+        with:
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+          context: .
+          platforms: linux/${{ matrix.arch }}
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: container-image-digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  container-merge:
+    name: 📦 Merge Container Manifests
+    runs-on: ubuntu-latest
+    needs:
+      - container-build
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: container-image-digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to container registry
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -100,76 +162,23 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},suffix=-${{ steps.system.outputs.SYSTEM_ARCH }}
-            type=edge,suffix=-${{ steps.system.outputs.SYSTEM_ARCH }}
+            type=raw,value=latest
+            type=semver,pattern={{version}}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        id: build
-        with:
-          context: .
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
-          push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Write digest to file
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
         run: |
-          echo "${{ steps.build.outputs.digest }}" | tee "${{ steps.system.outputs.SYSTEM_ARCH }}.digest"
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ github.repository }}@sha256:%s ' *)
 
-      - name: Upload digest artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: 'image-digest-${{ steps.system.outputs.SYSTEM_ARCH }}'
-          path: "*.digest"
-
-  manifest:
-    name: Create image manifest list
-    runs-on: ubuntu-latest
-    needs:
-      - container-image
-    if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Download digest artifact
-        uses: actions/download-artifact@v7
-        with:
-          pattern: "image-digest-*"
-          merge-multiple: true
-
-      - name: Generate image names
-        id: transform
+      - name: Inspect image
         run: |
-          RESULT=$(cat *.digest | awk '{print "${{ env.REGISTRY }}/${{ github.repository }}@" $0}')
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-
-          echo "sources<<$EOF" >> "$GITHUB_OUTPUT"
-          echo "$RESULT" >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Create manifest list
-        uses: int128/docker-manifest-create-action@v2
-        with:
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
-          sources: |
-            ${{ steps.transform.outputs.sources }}
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.version }}
 
   release:
     name: Create Release
@@ -188,7 +197,7 @@ jobs:
         id: artifacts
         with:
           merge-multiple: true
-          pattern: "${{ env.MK_APPLICATION_NAME }}-*"
+          pattern: "${{ env.CI_BUILD_APPLICATION_NAME }}-*"
           path: binaries
 
       - uses: sean0x42/markdown-extract@v2
