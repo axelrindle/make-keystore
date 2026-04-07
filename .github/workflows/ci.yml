@@ -70,8 +70,10 @@ jobs:
       matrix:
         include:
           - arch: amd64
+            system: linux
             runner: ubuntu-latest
           - arch: arm64
+            system: linux
             runner: ubuntu-24.04-arm
     env:
       BUILD_IMAGE_NAME: ${{ github.event.repository.name }}-${{ matrix.system }}-${{ matrix.arch }}
